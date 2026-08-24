@@ -2,6 +2,7 @@ package com.tup.youtube_playlist_checker.controllers;
 
 import com.tup.youtube_playlist_checker.entity.Playlist;
 import com.tup.youtube_playlist_checker.services.PlaylistService;
+import com.tup.youtube_playlist_checker.services.YoutubeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,16 @@ import java.util.Optional;
 public class PlaylistController {
 
     private final PlaylistService playlistService;
+    private final YoutubeService youtubeService;
 
-    public PlaylistController(PlaylistService playlistService) {
+    public PlaylistController(PlaylistService playlistService, YoutubeService youtubeService) {
         this.playlistService = playlistService;
+        this.youtubeService = youtubeService;
+    }
+
+    @GetMapping("/youtube/test/{youtubeId}")
+    public ResponseEntity<String> obtenerDesdeYoutube(@PathVariable String youtubeId) {
+        return ResponseEntity.ok(youtubeService.obtenerPlaylist(youtubeId));
     }
 
     @GetMapping
