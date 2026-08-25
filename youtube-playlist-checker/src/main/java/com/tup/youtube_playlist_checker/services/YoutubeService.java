@@ -2,6 +2,9 @@ package com.tup.youtube_playlist_checker.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tup.youtube_playlist_checker.dtos.YoutubePlaylistItemResponse;
+import com.tup.youtube_playlist_checker.dtos.YoutubePlaylistResponse;
+import com.tup.youtube_playlist_checker.dtos.YoutubeVideoResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -48,12 +51,24 @@ public class YoutubeService {
             return null;
         }
 
-        YoutubePlaylistItem item = response.items().getFirst();
+        YoutubePlaylistItemResponse item = response.items().getFirst();
+
+        String titulo = null;
+        int cantidadVideos = 0;
+
+        if (item.snippet() != null) {
+            titulo = item.snippet().title();
+        }
+
+        if (item.contentDetails() != null && item.contentDetails().itemCount() != null) {
+
+            cantidadVideos = item.contentDetails().itemCount();
+        }
 
         return new YoutubePlaylist(
                 item.id(),
-                item.snippet().title(),
-                item.contentDetails().itemCount()
+                titulo,
+                cantidadVideos
         );
     }
 
@@ -69,7 +84,7 @@ public class YoutubeService {
         do {
             final String pageToken = nextPageToken;
 
-            YoutubePlaylistItemsResponse response = restClient.get()
+            YoutubePlaylistResponse response = restClient.get()
                     .uri(uriBuilder -> {
                         var builder = uriBuilder
                                 .path("/playlistItems")
@@ -85,36 +100,32 @@ public class YoutubeService {
                         return builder.build();
                     })
                     .retrieve()
-                    .body(YoutubePlaylistItemsResponse.class);
+                    .body(YoutubePlaylistResponse.class);
 
             if (response == null || response.items() == null) {
                 break;
             }
 
-            for (YoutubePlaylistItemVideo item : response.items()) {
+            for (YoutubePlaylistItemResponse item : response.items()) {
 
-                String videoId = null;
+                String videoId = obtenerVideoId(item);
 
-                if (item.contentDetails() != null) {
-                    videoId = item.contentDetails().videoId();
+                if (videoId == null) {
+                    continue;
                 }
 
-                if (videoId == null && item.snippet() != null
-                        && item.snippet().resourceId() != null) {
-                    videoId = item.snippet().resourceId().videoId();
+                String titulo = null;
+
+                if (item.snippet() != null) {
+                    titulo = item.snippet().title();
                 }
 
-                if (videoId != null) {
-                    String title = item.snippet() != null
-                            ? item.snippet().title()
-                            : null;
-
-                    videos.add(new YoutubePlaylistVideo(
-                            videoId,
-                            title
-                    ));
-                }
+                videos.add(new YoutubePlaylistVideo(
+                        videoId,
+                        titulo
+                ));
             }
+
 
             nextPageToken = response.nextPageToken();
 
@@ -141,7 +152,7 @@ public class YoutubeService {
 
             List<String> lote = videoIds.subList(inicio, fin);
 
-            YoutubeVideosResponse response = restClient.get()
+            YoutubeVideoResponse response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/videos")
                             .queryParam("part", "snippet,status,contentDetails")
@@ -149,21 +160,24 @@ public class YoutubeService {
                             .queryParam("key", apiKey)
                             .build())
                     .retrieve()
-                    .body(YoutubeVideosResponse.class);
+                    .body(YoutubeVideoResponse.class);
 
             if (response == null || response.items() == null) {
                 continue;
             }
 
-            for (YoutubeVideoItem item : response.items()) {
+            for (YoutubeVideoResponse.Item item : response.items()) {
 
-                String titulo = item.snippet() != null
-                        ? item.snippet().title()
-                        : null;
+                String titulo = null;
+                String privacidad = null;
 
-                String privacidad = item.status() != null
-                        ? item.status().privacyStatus()
-                        : null;
+                if (item.snippet() != null) {
+                    titulo = item.snippet().title();
+                }
+
+                if (item.status() != null) {
+                    privacidad = item.status().privacyStatus();
+                }
 
                 videos.add(new YoutubeVideo(
                         item.id(),
@@ -176,8 +190,24 @@ public class YoutubeService {
         return videos;
     }
 
+    private String obtenerVideoId(YoutubePlaylistItemResponse item) {
 
-    // Objetos que utilizamos dentro de nuestra aplicación
+        if (item.snippet() != null &&
+                item.snippet().resourceId() != null) {
+
+            return item.snippet()
+                    .resourceId()
+                    .videoId();
+        }
+
+        if (item.contentDetails() != null) {
+            return item.contentDetails().videoId();
+        }
+
+        return null;
+    }
+
+    // Objetos que utilizamos dentro de nuestro archivo
 
     public record YoutubePlaylist(
             String youtubeId,
@@ -196,82 +226,6 @@ public class YoutubeService {
             String youtubeId,
             String titulo,
             String privacidad
-    ) {
-    }
-
-    // Respuestas de la API de YouTube
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubePlaylistResponse(
-            List<YoutubePlaylistItem> items
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubePlaylistItem(
-            String id,
-            YoutubeSnippet snippet,
-            YoutubeContentDetails contentDetails
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubePlaylistItemsResponse(
-            String nextPageToken,
-            List<YoutubePlaylistItemVideo> items
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubePlaylistItemVideo(
-            YoutubeSnippet snippet,
-            YoutubePlaylistItemContentDetails contentDetails
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubePlaylistItemContentDetails(
-            String videoId
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubeVideosResponse(
-            List<YoutubeVideoItem> items
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubeVideoItem(
-            String id,
-            YoutubeSnippet snippet,
-            YoutubeVideoStatus status
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubeSnippet(
-            String title,
-            YoutubeResourceId resourceId
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubeResourceId(
-            String videoId
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubeContentDetails(
-            int itemCount
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record YoutubeVideoStatus(
-            @JsonProperty("privacyStatus")
-            String privacyStatus
     ) {
     }
 }
