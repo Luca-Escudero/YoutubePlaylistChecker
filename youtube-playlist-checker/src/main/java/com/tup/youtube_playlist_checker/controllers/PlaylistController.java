@@ -22,7 +22,7 @@ public class PlaylistController {
     }
 
     @GetMapping("/youtube/test/{youtubeId}")
-    public ResponseEntity<String> obtenerDesdeYoutube(@PathVariable String youtubeId) {
+    public ResponseEntity<YoutubeService.YoutubePlaylist> obtenerDesdeYoutube(@PathVariable String youtubeId) {
         return ResponseEntity.ok(youtubeService.obtenerPlaylist(youtubeId));
     }
 
@@ -44,10 +44,10 @@ public class PlaylistController {
 
     @GetMapping("/youtube/{youtubeId}")
     public ResponseEntity<Playlist> obtenerPorYoutubeId(@PathVariable String youtubeId) {
-        Optional<Playlist> playlist = playlistService.obtenerPorYoutubeId(youtubeId);
+        Playlist playlist = playlistService.obtenerOCrearDesdeYoutube(youtubeId);
 
-        if (playlist.isPresent()) {
-            return ResponseEntity.ok(playlist.get());
+        if (playlist != null) {
+            return ResponseEntity.ok(playlist);
         }
 
         return ResponseEntity.notFound().build();
