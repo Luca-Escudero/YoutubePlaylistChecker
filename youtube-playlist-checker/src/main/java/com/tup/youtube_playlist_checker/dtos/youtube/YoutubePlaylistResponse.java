@@ -1,4 +1,4 @@
-package com.tup.youtube_playlist_checker.dtos;
+package com.tup.youtube_playlist_checker.dtos.youtube;
 
 import java.util.List;
 

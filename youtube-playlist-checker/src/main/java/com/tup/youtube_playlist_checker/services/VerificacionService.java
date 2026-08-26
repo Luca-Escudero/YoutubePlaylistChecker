@@ -11,14 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class VerificacionesService {
+public class VerificacionService {
 
     private final YoutubeService youtubeService;
     private final PlaylistService playlistService;
     private final VideoService videoService;
     private final ConsultaService consultaService;
 
-    public VerificacionesService(YoutubeService youtubeService, PlaylistService playlistService, VideoService videoService, ConsultaService consultaService) {
+    public VerificacionService(YoutubeService youtubeService, PlaylistService playlistService, VideoService videoService, ConsultaService consultaService) {
         this.youtubeService = youtubeService;
         this.playlistService = playlistService;
         this.videoService = videoService;

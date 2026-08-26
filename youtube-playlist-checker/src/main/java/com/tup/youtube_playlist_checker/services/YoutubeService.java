@@ -1,10 +1,8 @@
 package com.tup.youtube_playlist_checker.services;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.tup.youtube_playlist_checker.dtos.YoutubePlaylistItemResponse;
-import com.tup.youtube_playlist_checker.dtos.YoutubePlaylistResponse;
-import com.tup.youtube_playlist_checker.dtos.YoutubeVideoResponse;
+import com.tup.youtube_playlist_checker.dtos.youtube.YoutubePlaylistItemResponse;
+import com.tup.youtube_playlist_checker.dtos.youtube.YoutubePlaylistResponse;
+import com.tup.youtube_playlist_checker.dtos.youtube.YoutubeVideoResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
