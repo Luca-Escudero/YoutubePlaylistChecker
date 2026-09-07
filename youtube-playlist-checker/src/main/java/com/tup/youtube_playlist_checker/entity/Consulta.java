@@ -29,6 +29,10 @@ public class Consulta {
     @JoinColumn(name = "playlist_id", nullable = false)
     private Playlist playlist;
 
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
+
     @Column(name = "fecha_consulta", nullable = false)
     private LocalDateTime fechaConsulta;
 
