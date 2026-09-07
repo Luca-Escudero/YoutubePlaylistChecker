@@ -40,5 +40,4 @@ public class Consulta {
 
     @Column(name = "no_disponibles")
     private Integer noDisponibles;
-
 }
