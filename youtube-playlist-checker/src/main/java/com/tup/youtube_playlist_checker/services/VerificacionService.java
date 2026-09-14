@@ -5,6 +5,8 @@ import com.tup.youtube_playlist_checker.entity.Playlist;
 import com.tup.youtube_playlist_checker.entity.Video;
 import com.tup.youtube_playlist_checker.entity.EstadoVideo;
 import com.tup.youtube_playlist_checker.entity.MotivoIndisponibilidad;
+import com.tup.youtube_playlist_checker.entity.Usuario;
+import com.tup.youtube_playlist_checker.utils.YoutubeUrlParser;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,9 +27,17 @@ public class VerificacionService {
         this.consultaService = consultaService;
     }
 
-    //Ejecuta una verificación completa de una playlist.
+    public ResultadoVerificacion verificar(String inputUrlOrId) {
+        return verificar(inputUrlOrId, null);
+    }
 
-    public ResultadoVerificacion verificar(String playlistId) {
+    public ResultadoVerificacion verificar(String inputUrlOrId, Usuario usuario) {
+        String playlistId = YoutubeUrlParser.extraerPlaylistId(inputUrlOrId);
+
+        if (playlistId == null || playlistId.isBlank()) {
+            return null;
+        }
+
         //1. Obtener información de la playlist desde YouTube
         YoutubeService.YoutubePlaylist playlistYoutube = youtubeService.obtenerPlaylist(playlistId);
 
@@ -111,8 +121,7 @@ public class VerificacionService {
 
                     estado = EstadoVideo.NO_DISPONIBLE;
 
-                    motivo = determinarMotivo(informacion.privacidad()
-                    );
+                    motivo = determinarMotivo(informacion.privacidad());
 
                     noDisponibles++;
                 }
@@ -129,10 +138,10 @@ public class VerificacionService {
             videosVerificados.add(video);
         }
 
-        //6. Crear Consulta
-
+        //6. Crear Consulta asociada al usuario
         Consulta consulta = consultaService.registrarConsulta(
                 playlist,
+                usuario,
                 videosYoutube.size(),
                 disponibles,
                 noDisponibles
