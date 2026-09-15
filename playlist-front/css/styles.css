@@ -1,0 +1,100 @@
+/* Custom Styles for YouTube Playlist Checker - AdminLTE / Bootstrap 5 */
+:root {
+  --primary-red: #ff0000;
+  --dark-red: #cc0000;
+  --brand-bg: #1e1e2d;
+}
+
+.login-page, .register-page {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+}
+
+.login-box, .register-box {
+  width: 100%;
+  max-width: 440px;
+  padding: 20px;
+}
+
+.login-logo a, .register-logo a {
+  color: #ffffff;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-logo span, .register-logo span {
+  color: var(--primary-red);
+}
+
+.card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+  color: var(--primary-red);
+}
+
+.video-status-badge {
+  font-size: 0.85rem;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.badge-disponible {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+}
+
+.badge-no-disponible {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+
+.stats-card {
+  border-left: 4px solid var(--primary-red);
+  transition: transform 0.2s;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+}
+
+.video-thumb {
+  width: 120px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 6px;
+  background-color: #2b3035;
+}
+
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Spinner overlay */
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 30px;
+}

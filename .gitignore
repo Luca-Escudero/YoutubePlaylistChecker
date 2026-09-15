@@ -1,0 +1,15 @@
+# Exclusiones de VS Code
+.vscode/
+
+# Maven / Java
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Entornos
+.env

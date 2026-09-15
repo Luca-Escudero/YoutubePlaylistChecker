@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtUtil.extractUsername(jwt);
         } catch (Exception e) {
+            logger.error("Error al extraer username del token JWT: " + e.getMessage(), e);
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,6 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                logger.error("validateToken devolvió false para el usuario: " + userEmail);
             }
         }
         filterChain.doFilter(request, response);

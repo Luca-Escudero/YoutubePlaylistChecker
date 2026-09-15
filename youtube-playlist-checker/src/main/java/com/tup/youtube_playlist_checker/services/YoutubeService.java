@@ -34,40 +34,42 @@ public class YoutubeService {
     //Traemos información básica de una playlist de YouTube
 
     public YoutubePlaylist obtenerPlaylist(String playlistId) {
+        try {
+            YoutubePlaylistResponse response = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/playlists")
+                            .queryParam("part", "snippet,contentDetails")
+                            .queryParam("id", playlistId)
+                            .queryParam("key", apiKey)
+                            .build())
+                    .retrieve()
+                    .body(YoutubePlaylistResponse.class);
 
-        YoutubePlaylistResponse response = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/playlists")
-                        .queryParam("part", "snippet,contentDetails")
-                        .queryParam("id", playlistId)
-                        .queryParam("key", apiKey)
-                        .build())
-                .retrieve()
-                .body(YoutubePlaylistResponse.class);
+            if (response == null || response.items() == null || response.items().isEmpty()) {
+                return null;
+            }
 
-        if (response == null || response.items() == null || response.items().isEmpty()) {
-            return null;
+            YoutubePlaylistItemResponse item = response.items().getFirst();
+
+            String titulo = null;
+            int cantidadVideos = 0;
+
+            if (item.snippet() != null) {
+                titulo = item.snippet().title();
+            }
+
+            if (item.contentDetails() != null && item.contentDetails().itemCount() != null) {
+                cantidadVideos = item.contentDetails().itemCount();
+            }
+
+            return new YoutubePlaylist(
+                    item.id(),
+                    titulo,
+                    cantidadVideos
+            );
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            throw new IllegalArgumentException("Error al consultar la API de YouTube (" + e.getStatusCode() + "). Comprobá tu YOUTUBE_API_KEY en el archivo .env: " + e.getMessage());
         }
-
-        YoutubePlaylistItemResponse item = response.items().getFirst();
-
-        String titulo = null;
-        int cantidadVideos = 0;
-
-        if (item.snippet() != null) {
-            titulo = item.snippet().title();
-        }
-
-        if (item.contentDetails() != null && item.contentDetails().itemCount() != null) {
-
-            cantidadVideos = item.contentDetails().itemCount();
-        }
-
-        return new YoutubePlaylist(
-                item.id(),
-                titulo,
-                cantidadVideos
-        );
     }
 
     //Conseguimos todos los videos de una playlist
