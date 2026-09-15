@@ -1,0 +1,8 @@
+{
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/pages/register-login/login", "destination": "/pages/register-login/login.html" },
+    { "source": "/pages/register-login/register", "destination": "/pages/register-login/register.html" },
+    { "source": "/pages/user/home-user", "destination": "/pages/user/home-user.html" }
+  ]
+}
