@@ -9,7 +9,9 @@ public record VideoResponse(
         Long id,
         String youtubeId,
         String titulo,
+        String canal,
         EstadoVideo estado,
+        boolean disponible,
         MotivoIndisponibilidad motivo,
         LocalDateTime ultimaActualizacion
 ) {

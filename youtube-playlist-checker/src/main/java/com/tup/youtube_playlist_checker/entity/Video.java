@@ -41,6 +41,9 @@ public class Video {
     @Column(length = 255)
     private String titulo;
 
+    @Column(length = 255)
+    private String canal;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 30, nullable = false)
     private EstadoVideo estado;

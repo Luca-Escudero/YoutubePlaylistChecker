@@ -39,8 +39,17 @@ export function showSuccess(container, message) {
 
 export function formatDate(dateString) {
   if (!dateString) return "-";
+  if (Array.isArray(dateString)) {
+    const [year, month, day, hour = 0, minute = 0] = dateString;
+    const d = String(day).padStart(2, '0');
+    const m = String(month).padStart(2, '0');
+    const h = String(hour).padStart(2, '0');
+    const min = String(minute).padStart(2, '0');
+    return `${d}/${m}/${year} ${h}:${min}`;
+  }
   try {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return String(dateString);
     return date.toLocaleString("es-AR", {
       day: "2-digit",
       month: "2-digit",
@@ -49,7 +58,7 @@ export function formatDate(dateString) {
       minute: "2-digit"
     });
   } catch (e) {
-    return dateString;
+    return String(dateString);
   }
 }
 

@@ -7,3 +7,11 @@ export async function getMisConsultas() {
 export async function getConsultaPorId(id) {
   return api.get(`/consultas/${id}`);
 }
+
+export async function getConsultasPorPlaylist(playlistId) {
+  return api.get(`/consultas/playlist/${playlistId}`);
+}
+
+export async function compararConsultas(idAnterior, idNueva) {
+  return api.get(`/consultas/comparar?idAnterior=${idAnterior}&idNueva=${idNueva}`);
+}

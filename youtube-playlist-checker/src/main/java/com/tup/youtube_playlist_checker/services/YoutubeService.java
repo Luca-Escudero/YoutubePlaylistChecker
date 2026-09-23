@@ -88,7 +88,7 @@ public class YoutubeService {
                     .uri(uriBuilder -> {
                         var builder = uriBuilder
                                 .path("/playlistItems")
-                                .queryParam("part", "snippet,contentDetails")
+                                .queryParam("part", "snippet,status,contentDetails")
                                 .queryParam("playlistId", playlistId)
                                 .queryParam("maxResults", 50)
                                 .queryParam("key", apiKey);
@@ -115,14 +115,23 @@ public class YoutubeService {
                 }
 
                 String titulo = null;
+                String canal = null;
+                String privacidad = null;
 
                 if (item.snippet() != null) {
                     titulo = item.snippet().title();
+                    canal = item.snippet().videoOwnerChannelTitle();
+                }
+
+                if (item.status() != null) {
+                    privacidad = item.status().privacyStatus();
                 }
 
                 videos.add(new YoutubePlaylistVideo(
                         videoId,
-                        titulo
+                        titulo,
+                        canal,
+                        privacidad
                 ));
             }
 
@@ -169,20 +178,38 @@ public class YoutubeService {
             for (YoutubeVideoResponse.Item item : response.items()) {
 
                 String titulo = null;
+                String canal = null;
                 String privacidad = null;
+                String uploadStatus = null;
+                String rejectionReason = null;
+                boolean esRestringidoRegional = false;
 
                 if (item.snippet() != null) {
                     titulo = item.snippet().title();
+                    canal = item.snippet().channelTitle();
                 }
 
                 if (item.status() != null) {
                     privacidad = item.status().privacyStatus();
+                    uploadStatus = item.status().uploadStatus();
+                    rejectionReason = item.status().rejectionReason();
+                }
+
+                if (item.contentDetails() != null && item.contentDetails().regionRestriction() != null) {
+                    var rr = item.contentDetails().regionRestriction();
+                    if ((rr.blocked() != null && !rr.blocked().isEmpty()) || (rr.allowed() != null && !rr.allowed().isEmpty())) {
+                        esRestringidoRegional = true;
+                    }
                 }
 
                 videos.add(new YoutubeVideo(
                         item.id(),
                         titulo,
-                        privacidad
+                        canal,
+                        privacidad,
+                        uploadStatus,
+                        rejectionReason,
+                        esRestringidoRegional
                 ));
             }
         }
@@ -218,14 +245,20 @@ public class YoutubeService {
 
     public record YoutubePlaylistVideo(
             String youtubeId,
-            String titulo
+            String titulo,
+            String canal,
+            String privacidad
     ) {
     }
 
     public record YoutubeVideo(
             String youtubeId,
             String titulo,
-            String privacidad
+            String canal,
+            String privacidad,
+            String uploadStatus,
+            String rejectionReason,
+            boolean esRestringidoRegional
     ) {
     }
 }

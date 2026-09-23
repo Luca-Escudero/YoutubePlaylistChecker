@@ -39,31 +39,53 @@ public class EntityMapper {
                 video.getId(),
                 video.getYoutubeId(),
                 video.getTitulo(),
+                video.getCanal(),
                 video.getEstado(),
+                video.getEstado() == com.tup.youtube_playlist_checker.entity.EstadoVideo.DISPONIBLE,
                 video.getMotivo(),
                 video.getUltimaActualizacion()
         );
     }
 
     public static ConsultaResponse toConsultaResponse(Consulta consulta) {
+        return toConsultaResponse(consulta, null);
+    }
+
+    public static ConsultaResponse toConsultaResponse(Consulta consulta, List<Video> videos) {
 
         if (consulta == null) {
             return null;
         }
 
         Long playlistId = null;
+        PlaylistResponse playlistResponse = null;
 
         if (consulta.getPlaylist() != null) {
             playlistId = consulta.getPlaylist().getId();
+            playlistResponse = toPlaylistResponse(consulta.getPlaylist());
         }
+
+        List<VideoResponse> videoResponses = videos != null ? toVideoResponseList(videos) : List.of();
+
+        int total = consulta.getCantidadVideos() != null ? consulta.getCantidadVideos() : 0;
+        int disp = consulta.getDisponibles() != null ? consulta.getDisponibles() : 0;
+        int noDisp = consulta.getNoDisponibles() != null ? consulta.getNoDisponibles() : 0;
+
+        double pctDisp = total > 0 ? Math.round((disp * 100.0 / total) * 100.0) / 100.0 : 0.0;
+        double pctNoDisp = total > 0 ? Math.round((noDisp * 100.0 / total) * 100.0) / 100.0 : 0.0;
 
         return new ConsultaResponse(
                 consulta.getId(),
                 playlistId,
+                playlistResponse,
+                videoResponses,
                 consulta.getFechaConsulta(),
                 consulta.getCantidadVideos(),
                 consulta.getDisponibles(),
-                consulta.getNoDisponibles()
+                consulta.getNoDisponibles(),
+                consulta.getDuracionMs(),
+                pctDisp,
+                pctNoDisp
         );
     }
 
