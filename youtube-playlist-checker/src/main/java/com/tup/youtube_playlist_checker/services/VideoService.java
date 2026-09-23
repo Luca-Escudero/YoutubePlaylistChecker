@@ -50,6 +50,7 @@ public class VideoService {
             Playlist playlist,
             String youtubeId,
             String titulo,
+            String canal,
             EstadoVideo estado,
             MotivoIndisponibilidad motivo) {
 
@@ -70,6 +71,7 @@ public class VideoService {
         }
 
         video.setTitulo(titulo);
+        video.setCanal(canal);
         video.setEstado(estado);
         video.setMotivo(motivo);
         video.setUltimaActualizacion(LocalDateTime.now());

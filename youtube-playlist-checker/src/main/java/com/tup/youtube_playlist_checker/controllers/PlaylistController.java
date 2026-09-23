@@ -1,6 +1,8 @@
 package com.tup.youtube_playlist_checker.controllers;
 
+import com.tup.youtube_playlist_checker.dtos.PlaylistResponse;
 import com.tup.youtube_playlist_checker.entity.Playlist;
+import com.tup.youtube_playlist_checker.mapper.EntityMapper;
 import com.tup.youtube_playlist_checker.services.PlaylistService;
 import com.tup.youtube_playlist_checker.services.YoutubeService;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +29,12 @@ public class PlaylistController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Playlist>> obtenerTodas() {
-        return ResponseEntity.ok(playlistService.obtenerTodas());
+    public ResponseEntity<List<PlaylistResponse>> obtenerTodas() {
+        List<Playlist> playlists = playlistService.obtenerTodas();
+        List<PlaylistResponse> response = playlists.stream()
+                .map(EntityMapper::toPlaylistResponse)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

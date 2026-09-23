@@ -63,8 +63,17 @@ public class VerificacionController {
 
     private Usuario getAuthenticatedUsuario() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetails userDetails) {
-            return usuarioRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        if (auth != null && auth.isAuthenticated()) {
+            Object principal = auth.getPrincipal();
+            String email = null;
+            if (principal instanceof UserDetails userDetails) {
+                email = userDetails.getUsername();
+            } else if (principal instanceof String str && !"anonymousUser".equals(str)) {
+                email = str;
+            }
+            if (email != null) {
+                return usuarioRepository.findByEmail(email).orElse(null);
+            }
         }
         return null;
     }

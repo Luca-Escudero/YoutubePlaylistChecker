@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="/css/adminlte.css" />
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg sidebar-open bg-body-tertiary">
@@ -127,46 +128,66 @@
 
             <!-- Verification Results -->
             <div id="verification-results" style="display: none">
-              <!-- Summary Cards -->
-              <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                  <div class="card border-0 shadow-sm stats-card bg-white p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                      <div>
-                        <p class="text-muted mb-1 text-uppercase fw-semibold small">Total de Videos</p>
-                        <h2 class="mb-0 fw-bold text-dark" id="stat-total">0</h2>
+              <!-- Summary Cards & Chart -->
+              <div class="row g-3 mb-4 align-items-center">
+                <div class="col-md-8">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="card border-0 shadow-sm stats-card bg-white p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                          <div>
+                            <p class="text-muted mb-1 text-uppercase fw-semibold small">Total de Videos</p>
+                            <h2 class="mb-0 fw-bold text-dark" id="stat-total">0</h2>
+                            <small class="text-muted" id="stat-duracion"><i class="bi bi-clock me-1"></i>0ms</small>
+                          </div>
+                          <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                            <i class="bi bi-film fs-3"></i>
+                          </div>
+                        </div>
                       </div>
-                      <div class="bg-primary-subtle text-primary p-3 rounded-circle">
-                        <i class="bi bi-film fs-3"></i>
+                    </div>
+
+                    <div class="col-md-4">
+                      <div class="card border-0 shadow-sm stats-card bg-white p-3" style="border-left-color: #198754 !important;">
+                        <div class="d-flex align-items-center justify-content-between">
+                          <div>
+                            <p class="text-muted mb-1 text-uppercase fw-semibold small">Disponibles</p>
+                            <h2 class="mb-0 fw-bold text-success d-flex align-items-center gap-2">
+                              <span id="stat-disponibles">0</span>
+                              <span class="badge bg-success-subtle text-success fs-6" id="stat-disponibles-pct">0%</span>
+                            </h2>
+                          </div>
+                          <div class="bg-success-subtle text-success p-3 rounded-circle">
+                            <i class="bi bi-check-circle fs-3"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <div class="card border-0 shadow-sm stats-card bg-white p-3" style="border-left-color: #dc3545 !important;">
+                        <div class="d-flex align-items-center justify-content-between">
+                          <div>
+                            <p class="text-muted mb-1 text-uppercase fw-semibold small">No Disponibles</p>
+                            <h2 class="mb-0 fw-bold text-danger d-flex align-items-center gap-2">
+                              <span id="stat-no-disponibles">0</span>
+                              <span class="badge bg-danger-subtle text-danger fs-6" id="stat-no-disponibles-pct">0%</span>
+                            </h2>
+                          </div>
+                          <div class="bg-danger-subtle text-danger p-3 rounded-circle">
+                            <i class="bi bi-exclamation-triangle fs-3"></i>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
+                <!-- Visual Chart -->
                 <div class="col-md-4">
-                  <div class="card border-0 shadow-sm stats-card bg-white p-3" style="border-left-color: #198754 !important;">
-                    <div class="d-flex align-items-center justify-content-between">
-                      <div>
-                        <p class="text-muted mb-1 text-uppercase fw-semibold small">Disponibles</p>
-                        <h2 class="mb-0 fw-bold text-success" id="stat-disponibles">0</h2>
-                      </div>
-                      <div class="bg-success-subtle text-success p-3 rounded-circle">
-                        <i class="bi bi-check-circle fs-3"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-md-4">
-                  <div class="card border-0 shadow-sm stats-card bg-white p-3" style="border-left-color: #dc3545 !important;">
-                    <div class="d-flex align-items-center justify-content-between">
-                      <div>
-                        <p class="text-muted mb-1 text-uppercase fw-semibold small">No Disponibles / Eliminados</p>
-                        <h2 class="mb-0 fw-bold text-danger" id="stat-no-disponibles">0</h2>
-                      </div>
-                      <div class="bg-danger-subtle text-danger p-3 rounded-circle">
-                        <i class="bi bi-exclamation-triangle fs-3"></i>
-                      </div>
+                  <div class="card border-0 shadow-sm bg-white p-3">
+                    <div style="height: 140px; position: relative;">
+                      <canvas id="chart-disponibilidad"></canvas>
                     </div>
                   </div>
                 </div>
@@ -301,6 +322,72 @@
                 </tr>
               </thead>
               <tbody id="modal-videos-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Modal -->
+  <div class="modal fade" id="modalComparacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-clock-history me-2"></i>Comparación en Diferentes Líneas de Tiempo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3 mb-3 border-bottom pb-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded">
+                <h6 class="fw-bold text-muted mb-1">Consulta Anterior (#1)</h6>
+                <div id="comp-fecha-1" class="fw-semibold">-</div>
+                <div class="small text-muted" id="comp-info-1">0 videos | 0 disp | 0 no disp</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded">
+                <h6 class="fw-bold text-muted mb-1">Consulta Reciente (#2)</h6>
+                <div id="comp-fecha-2" class="fw-semibold">-</div>
+                <div class="small text-muted" id="comp-info-2">0 videos | 0 disp | 0 no disp</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diff Cards -->
+          <div class="row g-3 mb-4 text-center">
+            <div class="col-md-6">
+              <div class="p-3 bg-success-subtle border border-success rounded">
+                <h6 class="fw-bold text-success mb-1">Cambio en Disponibles</h6>
+                <h3 class="fw-bold text-success mb-0" id="comp-diff-disp">0</h3>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-danger-subtle border border-danger rounded">
+                <h6 class="fw-bold text-danger mb-1">Cambio en No Disponibles</h6>
+                <h3 class="fw-bold text-danger mb-0" id="comp-diff-nodisp">0</h3>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold mb-2"><i class="bi bi-list-check me-2"></i>Estado de Videos Registrados en esta Playlist</h6>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Título del Video</th>
+                  <th>Canal</th>
+                  <th>Estado Actual</th>
+                  <th>Motivo Detallado</th>
+                </tr>
+              </thead>
+              <tbody id="comp-videos-body">
               </tbody>
             </table>
           </div>

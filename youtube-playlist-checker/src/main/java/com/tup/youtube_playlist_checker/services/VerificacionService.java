@@ -32,6 +32,7 @@ public class VerificacionService {
     }
 
     public ResultadoVerificacion verificar(String inputUrlOrId, Usuario usuario) {
+        long inicioMs = System.currentTimeMillis();
         String playlistId = YoutubeUrlParser.extraerPlaylistId(inputUrlOrId);
 
         if (playlistId == null || playlistId.isBlank()) {
@@ -52,14 +53,19 @@ public class VerificacionService {
                     Playlist nuevaPlaylist = new Playlist();
 
                     nuevaPlaylist.setYoutubeId(playlistYoutube.youtubeId());
-                    nuevaPlaylist.setTitulo(playlistYoutube.titulo());
+                    String tit = (playlistYoutube.titulo() != null && !playlistYoutube.titulo().isBlank())
+                            ? playlistYoutube.titulo() : "Playlist " + playlistId;
+                    nuevaPlaylist.setTitulo(tit);
                     nuevaPlaylist.setCantidadVideos(playlistYoutube.cantidadVideos());
                     nuevaPlaylist.setUrl("https://www.youtube.com/playlist?list=" + playlistId);
+                    nuevaPlaylist.setFechaPrimeraConsulta(java.time.LocalDateTime.now());
 
                     return playlistService.guardar(nuevaPlaylist);
                 });
 
-        playlist.setTitulo(playlistYoutube.titulo());
+        if (playlistYoutube.titulo() != null && !playlistYoutube.titulo().isBlank()) {
+            playlist.setTitulo(playlistYoutube.titulo());
+        }
         playlist.setCantidadVideos(playlistYoutube.cantidadVideos());
 
         playlist = playlistService.guardar(playlist);
@@ -97,20 +103,39 @@ public class VerificacionService {
             EstadoVideo estado;
             MotivoIndisponibilidad motivo;
             String titulo;
+            String canal;
 
             if (informacion == null) {
+                String titLower = videoYoutube.titulo() != null ? videoYoutube.titulo().toLowerCase() : "";
+                String priv = videoYoutube.privacidad();
 
-                estado = EstadoVideo.NO_DISPONIBLE;
-                motivo = MotivoIndisponibilidad.ELIMINADO;
-                titulo = videoYoutube.titulo();
+                if (titLower.contains("private") || titLower.contains("privado") || "private".equalsIgnoreCase(priv)) {
+                    estado = EstadoVideo.NO_DISPONIBLE;
+                    motivo = MotivoIndisponibilidad.PRIVADO;
+                    titulo = (videoYoutube.titulo() != null && !videoYoutube.titulo().isBlank())
+                            ? videoYoutube.titulo() : "Video privado";
+                } else if (titLower.contains("copyright") || titLower.contains("derechos")) {
+                    estado = EstadoVideo.NO_DISPONIBLE;
+                    motivo = MotivoIndisponibilidad.COPYRIGHT;
+                    titulo = (videoYoutube.titulo() != null && !videoYoutube.titulo().isBlank())
+                            ? videoYoutube.titulo() : "Video bloqueado por copyright";
+                } else {
+                    estado = EstadoVideo.NO_DISPONIBLE;
+                    motivo = MotivoIndisponibilidad.ELIMINADO;
+                    titulo = (videoYoutube.titulo() != null && !videoYoutube.titulo().isBlank())
+                            ? videoYoutube.titulo() : "Video no disponible";
+                }
+                canal = videoYoutube.canal();
 
                 noDisponibles++;
 
             } else {
 
                 titulo = informacion.titulo();
+                canal = (informacion.canal() != null && !informacion.canal().isBlank())
+                        ? informacion.canal() : videoYoutube.canal();
 
-                if ("public".equalsIgnoreCase(informacion.privacidad())) {
+                if ("public".equalsIgnoreCase(informacion.privacidad()) || "unlisted".equalsIgnoreCase(informacion.privacidad())) {
 
                     estado = EstadoVideo.DISPONIBLE;
                     motivo = null;
@@ -120,9 +145,7 @@ public class VerificacionService {
                 } else {
 
                     estado = EstadoVideo.NO_DISPONIBLE;
-
-                    motivo = determinarMotivo(informacion.privacidad());
-
+                    motivo = determinarMotivo(informacion);
                     noDisponibles++;
                 }
             }
@@ -131,6 +154,7 @@ public class VerificacionService {
                     playlist,
                     videoYoutube.youtubeId(),
                     titulo,
+                    canal,
                     estado,
                     motivo
             );
@@ -138,13 +162,16 @@ public class VerificacionService {
             videosVerificados.add(video);
         }
 
+        long duracionMs = System.currentTimeMillis() - inicioMs;
+
         //6. Crear Consulta asociada al usuario
         Consulta consulta = consultaService.registrarConsulta(
                 playlist,
                 usuario,
                 videosYoutube.size(),
                 disponibles,
-                noDisponibles
+                noDisponibles,
+                duracionMs
         );
 
         //7. Devolver resultado
@@ -159,22 +186,33 @@ public class VerificacionService {
         );
     }
 
-    //Determinamos el motivo de indisponibilidad según el privacyStatus devuelto por YouTube
+    //Determinamos el motivo de indisponibilidad según la información devuelta por YouTube
 
-    private MotivoIndisponibilidad determinarMotivo(String privacidad) {
-
-        if (privacidad == null) {
+    private MotivoIndisponibilidad determinarMotivo(YoutubeService.YoutubeVideo info) {
+        if (info == null) {
             return MotivoIndisponibilidad.DESCONOCIDO;
         }
 
-        return switch (privacidad.toLowerCase()) {
+        if (info.esRestringidoRegional()) {
+            return MotivoIndisponibilidad.RESTRICCION_REGIONAL;
+        }
 
-            case "private" ->
-                    MotivoIndisponibilidad.PRIVADO;
+        String rej = info.rejectionReason() != null ? info.rejectionReason().toLowerCase() : "";
+        if (rej.contains("claim") || rej.contains("copyright") || rej.contains("legal") || rej.contains("termsofuse")) {
+            return MotivoIndisponibilidad.COPYRIGHT;
+        }
 
-            default ->
-                    MotivoIndisponibilidad.DESCONOCIDO;
-        };
+        String priv = info.privacidad() != null ? info.privacidad().toLowerCase() : "";
+        if ("private".equalsIgnoreCase(priv)) {
+            return MotivoIndisponibilidad.PRIVADO;
+        }
+
+        String upStatus = info.uploadStatus() != null ? info.uploadStatus().toLowerCase() : "";
+        if ("deleted".equalsIgnoreCase(upStatus) || "failed".equalsIgnoreCase(upStatus) || "rejected".equalsIgnoreCase(upStatus)) {
+            return MotivoIndisponibilidad.ELIMINADO;
+        }
+
+        return MotivoIndisponibilidad.DESCONOCIDO;
     }
 
     //Resultado de una verificación completa

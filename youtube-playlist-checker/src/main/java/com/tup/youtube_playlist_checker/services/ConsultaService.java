@@ -45,7 +45,8 @@ public class ConsultaService {
             Usuario usuario,
             int cantidadVideos,
             int disponibles,
-            int noDisponibles) {
+            int noDisponibles,
+            Long duracionMs) {
 
         Consulta consulta = new Consulta();
 
@@ -55,6 +56,7 @@ public class ConsultaService {
         consulta.setCantidadVideos(cantidadVideos);
         consulta.setDisponibles(disponibles);
         consulta.setNoDisponibles(noDisponibles);
+        consulta.setDuracionMs(duracionMs);
 
         return consultaRepository.save(consulta);
     }
@@ -63,8 +65,9 @@ public class ConsultaService {
             Playlist playlist,
             int cantidadVideos,
             int disponibles,
-            int noDisponibles) {
-        return registrarConsulta(playlist, null, cantidadVideos, disponibles, noDisponibles);
+            int noDisponibles,
+            Long duracionMs) {
+        return registrarConsulta(playlist, null, cantidadVideos, disponibles, noDisponibles, duracionMs);
     }
 
     public Consulta guardar(Consulta consulta) {
